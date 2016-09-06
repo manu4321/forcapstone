@@ -1,0 +1,43 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="ISO-8859-1">
+<title>Insert title here</title>
+<script src="https://ajax.googleapis.com/ajax/libs/jquery/1.12.4/jquery.min.js"></script>
+
+</head>
+<body>
+
+
+
+<script>
+
+$.ajax({
+	  method: "POST",
+	  url: "http://localhost:8080/login?j_username=admin&j_password=admin"
+	})
+	  .done(function( msg ) {
+	    alert( "Data Saved: " + msg );
+	    $.ajax({
+	  	  method: "PUT",
+	  	  url: "http://localhost:8080/spring/updateSave",
+		  data: {"id" : 0, "email": "manu"}
+	  	})
+	  	  .done(function( msg ) {
+	  	    alert( "Data Saved: " + msg );
+	  	  })
+	  	  .fail(function( jqXHR, textStatus ) {
+	  		  alert( "Request failed: " + textStatus );
+	  		}
+	  	  );
+	  })
+	  .fail(function( jqXHR, textStatus ) {
+		  alert( "Request failed: " + textStatus );
+		}
+	  );
+
+
+</script>
+</body>
+
+
