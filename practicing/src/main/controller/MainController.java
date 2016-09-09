@@ -37,7 +37,7 @@ public class MainController {
 			userDao.save(user);
 			userId = String.valueOf(user.getId());
 		} catch (Exception ex) {
-			return "Error creating the user: " + ex.toString();
+			return "Error creating the user: something " + ex.toString();
 		}
 		return "User succesfully created with id = " + userId;
 	}
