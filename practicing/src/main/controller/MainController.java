@@ -1,29 +1,21 @@
 package main.controller;
 
 import java.util.ArrayList;
-
-import javax.servlet.http.HttpServletRequest;
-
 import org.apache.log4j.Logger;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.security.authentication.AuthenticationDetailsSource;
-import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
-import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
-import org.springframework.security.web.authentication.WebAuthenticationDetailsSource;
 import org.springframework.web.bind.annotation.CrossOrigin;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
-import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.ResponseBody;
 import org.springframework.web.bind.annotation.RestController;
 import main.bean.user.User;
+import main.bean.user.UserRole;
 import main.dao.UserDao;
-import main.security.SecurityConfiguration;
 
 @RestController
 @RequestMapping("/spring")
@@ -35,7 +27,7 @@ public class MainController {
 		try {
 			User user = new User(email, name, userId, true);
 			userDao.save(user);
-			userId = String.valueOf(user.getId());
+			userId = String.valueOf(user.getUsername());
 		} catch (Exception ex) {
 			return "Error creating the user: something " + ex.toString();
 		}
@@ -50,12 +42,13 @@ public class MainController {
 			encryptedPassword = password;
 		}
 		User user = new User(username, encryptedPassword, email,  true);
-		main.bean.user.UserRole userRole = new main.bean.user.UserRole(user, "ROLE_USER");
+		UserRole userRole = new UserRole(user, "ROLE_USER");
 		user.getUserRole().add(userRole);
-		userDao.save(user);
+		User savedUser = userDao.save(user);
+		System.out.print(savedUser.getUserRole().size());
 		UserDetails userDetails = new main.bean.user.MyUserDetailsService(userDao).loadUserByUsername(username);
 		UsernamePasswordAuthenticationToken auth = new UsernamePasswordAuthenticationToken(userDetails,
-				password, userDetails.getAuthorities());
+				encryptedPassword, userDetails.getAuthorities());
 		SecurityContextHolder.getContext().setAuthentication(auth);
 		
 		return "it was registered!";
@@ -67,9 +60,9 @@ public class MainController {
 	 */
 	@RequestMapping("/delete")
 	@ResponseBody
-	public String delete(long id) {
+	public String delete(String username) {
 		try {
-			User user = new User(id);
+			User user = new User(username);
 			userDao.delete(user);
 		} catch (Exception ex) {
 			return "Error deleting the user:" + ex.toString();
@@ -86,7 +79,7 @@ public class MainController {
 		String userId = "";
 		try {
 			User user = userDao.findsomething(email);
-			userId = String.valueOf(user.getId());
+			userId = String.valueOf(user.getUsername());
 		} catch (Exception ex) {
 			return "User not found" + ex.toString();
 		}
@@ -186,10 +179,6 @@ public class MainController {
 	  }*/
 	  
 	// Private fields
-
-	@Autowired
-	private SecurityConfiguration securityConfig;
-	private AuthenticationDetailsSource<HttpServletRequest,?> authenticationDetailsSource = new WebAuthenticationDetailsSource();
 
 	@Autowired
 	private UserDao userDao;

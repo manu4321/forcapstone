@@ -12,16 +12,21 @@ import org.springframework.security.core.userdetails.User;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
+import org.springframework.stereotype.Service;
 import org.springframework.web.context.support.SpringBeanAutowiringSupport;
 
 import main.dao.UserDao;
 
-
+@Service("authService")
 public class MyUserDetailsService implements UserDetailsService{
 
 	@Autowired
 	private UserDao userDao;
 	
+	public MyUserDetailsService(){
+		super();
+		SpringBeanAutowiringSupport.processInjectionBasedOnCurrentContext(this);
+	}
 	public MyUserDetailsService(UserDao userDao2){
 		super();
 		this.userDao = userDao2;
@@ -29,9 +34,8 @@ public class MyUserDetailsService implements UserDetailsService{
 	}
 	@Override
 	public UserDetails loadUserByUsername(String username) throws UsernameNotFoundException {
-		// TODO Auto-generated method stub
 		main.bean.user.User user = userDao.findByUserName(username);
-		System.out.println("asdasdasd" + user);
+		//TODO check for null
 		List<GrantedAuthority> authorities = buildUserAuthority(user.getUserRole());
 		return buildUserForAuthentication(user, authorities);
 	}

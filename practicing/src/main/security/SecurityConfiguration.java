@@ -1,5 +1,7 @@
 package main.security;
 
+import javax.annotation.Resource;
+
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -9,15 +11,19 @@ import org.springframework.security.config.annotation.method.configuration.Enabl
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
 import org.springframework.security.config.annotation.web.configuration.WebSecurityConfigurerAdapter;
+import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.web.authentication.SimpleUrlAuthenticationFailureHandler;
+
+import main.bean.user.MyUserDetailsService;
 
 @Configuration
 @EnableWebSecurity
 @EnableGlobalMethodSecurity(prePostEnabled = true)
 public class SecurityConfiguration extends WebSecurityConfigurerAdapter {
 
-    @Autowired
-    private RestAuthenticationEntryPoint restAuthenticationEntryPoint;
+	
+	@Resource(name="authService")
+    private MyUserDetailsService myUserDetailsService;
  
     @Autowired
     private MySavedRequestAwareAuthenticationSuccessHandler authenticationSuccessHandler;
@@ -28,9 +34,18 @@ public class SecurityConfiguration extends WebSecurityConfigurerAdapter {
 	@Override
 	public void configure(AuthenticationManagerBuilder auth) throws Exception {
 
+        BCryptPasswordEncoder encoder = passwordEncoder();
+        auth
+			.userDetailsService(myUserDetailsService)
+			.passwordEncoder(encoder);
 		auth.inMemoryAuthentication().withUser("user").password("password").roles("USER").and().withUser("admin")
 				.password("admin").roles("USER", "ADMIN");
 		
+	}
+
+	private BCryptPasswordEncoder passwordEncoder() {
+        return new BCryptPasswordEncoder();
+
 	}
 
 	/**
@@ -46,15 +61,13 @@ public class SecurityConfiguration extends WebSecurityConfigurerAdapter {
 
 		http.httpBasic().and().authorizeRequests()
 				.antMatchers(HttpMethod.GET, "/spring/register").permitAll()
+				.antMatchers(HttpMethod.POST, "/login**").permitAll()
 				.antMatchers(HttpMethod.GET, "/spring/findAll").hasRole("USER")
-				.antMatchers(HttpMethod.POST, "/spring/login**").permitAll()
 				.antMatchers(HttpMethod.PUT, "/spring/**").hasRole("ADMIN")
 				.antMatchers(HttpMethod.POST, "/spring/**").hasRole("ADMIN")
 				.antMatchers(HttpMethod.PATCH, "/spring/**").hasRole("ADMIN")
 				.and()
 		        .formLogin()
-	               .usernameParameter("j_username")
-	                .passwordParameter("j_password")
 		        .successHandler(authenticationSuccessHandler)
 		        .failureHandler(new SimpleUrlAuthenticationFailureHandler())
 	            .and()
