@@ -4,13 +4,14 @@ import java.util.ArrayList;
 
 import javax.transaction.Transactional;
 
+import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.repository.CrudRepository;
 import org.springframework.data.repository.query.Param;
 
 import main.bean.user.User;
 
 @Transactional
-public interface UserDao extends CrudRepository<User, Long> {
+public interface UserDao extends JpaRepository<User, Long> {
 
 	/**
 	 * This method will find an User instance in the database by its email. Note

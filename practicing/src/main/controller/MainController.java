@@ -1,6 +1,7 @@
 package main.controller;
 
 import java.util.ArrayList;
+
 import org.apache.log4j.Logger;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
@@ -13,6 +14,8 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.ResponseBody;
 import org.springframework.web.bind.annotation.RestController;
+
+import main.bean.user.MyUserDetailsService;
 import main.bean.user.User;
 import main.bean.user.UserRole;
 import main.dao.UserDao;
@@ -20,6 +23,10 @@ import main.dao.UserDao;
 @RestController
 @RequestMapping("/spring")
 public class MainController {
+	
+	@Autowired
+	private MyUserDetailsService userDetailsService;
+	
 	@RequestMapping("/create")
 	@ResponseBody
 	public String create(String email, String name) {
@@ -34,7 +41,7 @@ public class MainController {
 		return "User succesfully created with id = " + userId;
 	}
 	
-	@RequestMapping("/register")
+	@RequestMapping(value = "/register", method = RequestMethod.POST)
 	@ResponseBody
 	public String register(String username, String password, String email) {
 		String encryptedPassword = new BCryptPasswordEncoder().encode(password);
@@ -42,11 +49,9 @@ public class MainController {
 			encryptedPassword = password;
 		}
 		User user = new User(username, encryptedPassword, email,  true);
-		UserRole userRole = new UserRole(user, "ROLE_USER");
-		user.getUserRole().add(userRole);
-		User savedUser = userDao.save(user);
-		System.out.print(savedUser.getUserRole().size());
-		UserDetails userDetails = new main.bean.user.MyUserDetailsService(userDao).loadUserByUsername(username);
+		user.grantRole(UserRole.ROLE_USER);
+		User savedUser = userDao.saveAndFlush(user);
+		UserDetails userDetails = userDetailsService.loadUserByUsername(username);
 		UsernamePasswordAuthenticationToken auth = new UsernamePasswordAuthenticationToken(userDetails,
 				encryptedPassword, userDetails.getAuthorities());
 		SecurityContextHolder.getContext().setAuthentication(auth);

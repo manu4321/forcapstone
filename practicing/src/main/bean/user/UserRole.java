@@ -1,62 +1,24 @@
 package main.bean.user;
 
-import java.io.Serializable;
 
-import javax.persistence.Column;
-import javax.persistence.Entity;
-import javax.persistence.FetchType;
-import javax.persistence.GeneratedValue;
-import javax.persistence.Id;
-import javax.persistence.JoinColumn;
-import javax.persistence.ManyToOne;
-import javax.persistence.Table;
-import javax.persistence.UniqueConstraint;
+public enum UserRole {
+	ROLE_USER, ROLE_ADMIN;
 
-@Entity
-@Table(name = "user_roles", uniqueConstraints = @UniqueConstraint(columnNames = { "role", "username" }) )
-
-public class UserRole implements Serializable{
-
-	@Id
-	@GeneratedValue(strategy = javax.persistence.GenerationType.IDENTITY)
-	@Column(name = "user_role_id", unique = true, nullable = false)
-	private Integer userRoleId;
-	@ManyToOne(fetch = FetchType.LAZY)
-	@JoinColumn(name = "username", nullable = false)
-	private User user;
-	@Column(name = "role", nullable = false, length = 45)
-	private String role;
-
-	public UserRole() {
+	public UserAuthority asAuthorityFor(final User user) {
+		final UserAuthority authority = new UserAuthority();
+		authority.setAuthority(toString());
+		authority.setUser(user);
+		return authority;
 	}
 
-	public UserRole( User user, String role) {
-		this.user = user;
-		this.role = role;
-	}
-
-	public Integer getUserRoleId() {
-		return userRoleId;
-	}
-
-	public void setUserRoleId(Integer userRoleId) {
-		this.userRoleId = userRoleId;
-	}
-
-	public User getUser() {
-		return user;
-	}
-
-	public void setUser(User user) {
-		this.user = user;
-	}
-
-	public String getRole() {
-		return role;
-	}
-
-	public void setRole(String role) {
-		this.role = role;
+	public static UserRole valueOf(final UserAuthority authority) {
+		switch (authority.getAuthority()) {
+		case "ROLE_USER":
+			return ROLE_USER;
+		case "ROLE_ADMIN":
+			return ROLE_ADMIN;
+		}
+		throw new IllegalArgumentException("No role defined for authority: " + authority.getAuthority());
 	}
 
 }
